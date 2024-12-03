@@ -1,0 +1,43 @@
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+type Animal struct {
+	Name string
+	Speed int
+	Size string
+	Climb bool
+	Sense bool
+}
+
+func loadInfo(name string, info chan<- Animal) {
+	time.Sleep(time.Second)
+	info <- Animal{name, 60, "Medium", true, false}
+}
+
+func main() {
+	animals := []string{"Lion", "Tiger", "Bear", "Wolf", "Fox"}
+	info := make(chan Animal, len(animals))
+
+	var wg sync.WaitGroup
+	wg.Add(len(animals))
+
+	for _, a := range animals {
+		go func(n string) {
+			defer wg.Done()
+			loadInfo(n, info)
+		}(a)
+	}
+
+	go func() {
+		for a := range info {
+			fmt.Println("Loaded:", a.Name)
+		}
+	}()
+
+	wg.Wait()
+}
